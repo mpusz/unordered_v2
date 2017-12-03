@@ -364,8 +364,8 @@ template <class Key, class T, class Hash, class Pred, class Alloc>
 
 */
 
-#include <experimental/__config>
-#include "experimental/__hash_table"
+#include <__config>
+#include <__hash_table>
 #include <functional>
 #include <stdexcept>
 #include <tuple>
@@ -376,7 +376,7 @@ template <class Key, class T, class Hash, class Pred, class Alloc>
 #pragma GCC system_header
 #endif
 
-_LIBCPP_BEGIN_NAMESPACE_EXPERIMENTAL
+_LIBCPP_BEGIN_NAMESPACE_STD
 
 template <class _Key, class _Cp, class _Hash, bool _IsEmpty>
 class __unordered_map_hasher
@@ -399,6 +399,13 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     size_t operator()(const _Key& __x) const
         {return static_cast<const _Hash&>(*this)(__x);}
+
+   template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Hash, _K2>::value,size_t>::type
+    operator()(const _K2& __x) const
+        {return static_cast<const _Hash&>(*this)(__x);}
+
     void swap(__unordered_map_hasher&__y)
         _NOEXCEPT_(__is_nothrow_swappable<_Hash>::value)
     {
@@ -428,7 +435,14 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     size_t operator()(const _Key& __x) const
         {return __hash_(__x);}
-    void swap(__unordered_map_hasher&__y)
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Hash, _K2>::value,size_t>::type
+    operator()(const _K2& __x) const
+        {return __hash_(__x);}
+
+  void swap(__unordered_map_hasher&__y)
         _NOEXCEPT_(__is_nothrow_swappable<_Hash>::value)
     {
         using _VSTD::swap;
@@ -470,6 +484,18 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     bool operator()(const _Key& __x, const _Cp& __y) const
         {return static_cast<const _Pred&>(*this)(__x, __y.__cc.first);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value,bool>::type
+    operator()(const _Cp& __x, const _K2& __y) const
+        {return static_cast<const _Pred&>(*this)(__x.__cc.first, __y);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value,bool>::type
+    operator()(const _K2& __x, const _Cp& __y) const
+        {return static_cast<const _Pred&>(*this)(__x, __y.__cc.first);}
+
     void swap(__unordered_map_equal&__y)
         _NOEXCEPT_(__is_nothrow_swappable<_Pred>::value)
     {
@@ -502,6 +528,18 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     bool operator()(const _Key& __x, const _Cp& __y) const
         {return __pred_(__x, __y.__cc.first);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value,bool>::type
+    operator()(const _Cp& __x, const _K2& __y) const
+        {return __pred_(__x.__cc.first, __y);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value,bool>::type
+    operator()(const _K2& __x, const _Cp& __y) const
+        {return __pred_(__x, __y.__cc.first);}
+
     void swap(__unordered_map_equal&__y)
         _NOEXCEPT_(__is_nothrow_swappable<_Pred>::value)
     {
@@ -1101,13 +1139,39 @@ public:
     iterator       find(const key_type& __k)       {return __table_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __table_.find(__k);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,iterator>::type
+    find(const _K2& __k)                           {return __table_.find(__k);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,const_iterator>::type
+    find(const _K2& __k) const                     {return __table_.find(__k);}
+
     _LIBCPP_INLINE_VISIBILITY
     size_type count(const key_type& __k) const {return __table_.__count_unique(__k);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,iterator>::type
+    count(const _K2& __k) const {return __table_.__count_unique(__k);}
+
     _LIBCPP_INLINE_VISIBILITY
     pair<iterator, iterator>             equal_range(const key_type& __k)
         {return __table_.__equal_range_unique(__k);}
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator, const_iterator> equal_range(const key_type& __k) const
+        {return __table_.__equal_range_unique(__k);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,pair<iterator, iterator>>::type
+    equal_range(const _K2& __k)
+        {return __table_.__equal_range_unique(__k);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,pair<const_iterator, const_iterator>>::type
+    equal_range(const _K2& __k) const
         {return __table_.__equal_range_unique(__k);}
 
     mapped_type& operator[](const key_type& __k);
@@ -2037,4 +2101,4 @@ operator!=(const unordered_multimap<_Key, _Tp, _Hash, _Pred, _Alloc>& __x,
     return !(__x == __y);
 }
 
-_LIBCPP_END_NAMESPACE_EXPERIMENTAL
+_LIBCPP_END_NAMESPACE_STD
