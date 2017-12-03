@@ -37,9 +37,10 @@ enable_testing()
 if(NOT TARGET mp::unordered_v2)
     find_package(unordered_v2 CONFIG REQUIRED)
 endif()
+find_package(benchmark CONFIG REQUIRED)
 
-add_executable(unit_tests tests.cpp)
-target_link_libraries(unit_tests
-        PRIVATE mp::unordered_v2)
-add_test(NAME unordered_v2.unit_tests
-        COMMAND unit_tests)
+add_executable(tests tests.cpp)
+target_link_libraries(tests
+        PRIVATE mp::unordered_v2 benchmark::benchmark)
+add_test(NAME unordered_v2.tests
+        COMMAND tests)

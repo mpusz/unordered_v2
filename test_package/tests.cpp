@@ -22,11 +22,10 @@
 
 #include "unordered_map"
 #include "unordered_set"
+#include <benchmark/benchmark.h>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <map>
-#include <iostream>
 
 using namespace std::literals;
 
@@ -39,8 +38,6 @@ struct string_hash {
   size_t operator()(const std::string& txt) const     { return hash_type{}(txt); }
   size_t operator()(const char* txt) const            { return hash_type{}(txt); }
 };
-
-}
 
 
 template<typename UnorderedMap>
@@ -65,11 +62,14 @@ void test_2()
 }
 
 
-int main()
+static void BM_Find(benchmark::State& state)
 {
-//  test_1<std::unordered_map<std::string, int>>();
-  test_1<std::unordered_map<std::string, int, string_hash, std::equal_to<>>>();
-
-//  test_2<std::unordered_map<std::string, int>>();
-  test_2<std::unordered_map<std::string, int, string_hash, std::equal_to<>>>();
+  std::unordered_map<std::string, int, string_hash, std::equal_to<>> map;
+  for (auto _ : state)
+    map.find("123"sv);
 }
+BENCHMARK(BM_Find);
+
+}
+
+BENCHMARK_MAIN();
