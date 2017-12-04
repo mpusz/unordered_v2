@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
 cmake_minimum_required(VERSION 3.5)
 project(unordered_v2)
 
@@ -30,6 +29,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/cmake")
 # include common tools and workarounds
 include(tools)
 
+# use Conan configuration if available
+conan_init()
+
+# add dependencies
+find_package(benchmark CONFIG REQUIRED)
+
 # project-specific compilation flags
 include(compile_flags)
 
@@ -38,4 +43,4 @@ add_subdirectory(src)
 
 # add unit tests
 enable_testing()
-add_subdirectory(test_package)
+add_subdirectory(tests)

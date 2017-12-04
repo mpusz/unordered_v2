@@ -1,0 +1,5 @@
+[requires]
+google-benchmark/1.3.0@mpusz/stable
+
+[generators]
+cmake

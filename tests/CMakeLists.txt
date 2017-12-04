@@ -20,25 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.8)
-project(unordered_v2_test)
-
-# set path to custom cmake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake/common/cmake")
-
-# include common tools and workarounds
-include(tools)
-
-# use Conan configuration if available
-conan_init()
-
-# add dependencies
-enable_testing()
-if(NOT TARGET mp::unordered_v2)
-    find_package(unordered_v2 CONFIG REQUIRED)
-endif()
-find_package(benchmark CONFIG REQUIRED)
-
 add_executable(tests tests.cpp)
 target_link_libraries(tests
         PRIVATE mp::unordered_v2 benchmark::benchmark)
