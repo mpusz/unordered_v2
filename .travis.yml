@@ -43,7 +43,7 @@ git:
 matrix:
   include:
     - os: linux
-      env: CLANG_VERSION=5.0 BUILD_TYPE=Release CODECOV=OFF
+      env: CLANG_VERSION=5.0 BUILD_TYPE=Release
       addons: &clang5
         apt:
           sources:
@@ -52,7 +52,7 @@ matrix:
             - clang-5.0
 
     - os: linux
-      env: CLANG_VERSION=5.0 BUILD_TYPE=Debug CODECOV=OFF
+      env: CLANG_VERSION=5.0 BUILD_TYPE=Debug
       addons: *clang5
 
 before_install:
