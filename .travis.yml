@@ -106,6 +106,7 @@ before_install:
     pip install --user conan
     conan profile new default --detect
     conan profile update settings.compiler.libcxx=libc++ default
+    conan remote add conan-mpusz https://api.bintray.com/conan/mpusz/conan-mpusz
 
   - |
     # Print environment
