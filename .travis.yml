@@ -35,7 +35,6 @@ cache:
   directories:
     - ${DEPS_DIR}/cmake-${CMAKE_VERSION}
     - ${DEPS_DIR}/llvm
-    - ${DEPS_DIR}/.conan
 
 git:
   depth: 3
@@ -102,7 +101,6 @@ before_install:
   - |
     # Install conan
     export PATH=$HOME/.local/bin:$PATH
-    export CONAN_USER_HOME=${DEPS_DIR}
     pip install --user conan
     conan profile new default --detect
     conan profile update settings.compiler.libcxx=libc++ default
