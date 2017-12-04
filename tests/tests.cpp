@@ -22,10 +22,12 @@
 
 #include "unordered_map"
 #include "unordered_set"
-#include <benchmark/benchmark.h>
 #include <string>
 #include <string_view>
 #include <vector>
+#include <random>
+#include <benchmark/benchmark.h>
+
 
 using namespace std::literals;
 
@@ -41,16 +43,6 @@ struct string_hash {
 
 
 template<typename UnorderedMap>
-void test_1()
-{
-  UnorderedMap map;
-  map.find("abcd");      // const char *
-  map.find("abcd"s);     // std::string
-  map.find("abcd"sv);    // std::string_view
-//  map.find(user_id{"abcd"});  // mp::inplace_string
-}
-
-template<typename UnorderedMap>
 void test_2()
 {
   std::vector<UnorderedMap> products;
@@ -61,15 +53,51 @@ void test_2()
   }
 }
 
+constexpr size_t item_count = 1024;
 
-static void BM_Find(benchmark::State& state)
+struct test_data {
+  std::vector<std::string> storage;
+  std::vector<std::pair<std::string_view, int>> test_sequence;
+};
+
+test_data make_test_data(size_t base_str_length)
 {
-  std::unordered_map<std::string, int, string_hash, std::equal_to<>> map;
-  for (auto _ : state)
-    map.find("123"sv);
+  test_data data;
+  data.storage.reserve(item_count);
+  data.test_sequence.reserve(item_count);
+  for(size_t i=0; i<item_count; ++i) {
+    data.storage.push_back(std::string(base_str_length, 'X') + std::to_string(i));
+    data.test_sequence.emplace_back(data.storage.back(), i);
+  }
+  std::mt19937 g;
+  std::shuffle(data.test_sequence.begin(), data.test_sequence.end(), g);
+  return data;
 }
-BENCHMARK(BM_Find);
+
+using regular_map = std::unordered_map<std::string, int>;
+using heterogeneous_map = std::unordered_map<std::string, int, string_hash, std::equal_to<>>;
+
+void BM_find_regular(benchmark::State& state)
+{
+  auto data = make_test_data(state.range(0));
+  regular_map map{data.test_sequence.begin(), data.test_sequence.end()};
+  for(auto _ : state)
+    for(const auto& el : data.test_sequence)
+      map.find(std::string{el.first});
+}
+
+void BM_find_heterogeneous(benchmark::State& state)
+{
+  auto data = make_test_data(state.range(0));
+  heterogeneous_map map{data.test_sequence.begin(), data.test_sequence.end()};
+  for(auto _ : state)
+    for(const auto& el : data.test_sequence)
+      map.find(el.first);
+}
 
 }
+
+BENCHMARK(BM_find_regular)->Arg(0)->Arg(128);
+BENCHMARK(BM_find_heterogeneous)->Arg(0)->Arg(128);
 
 BENCHMARK_MAIN();
