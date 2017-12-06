@@ -1191,9 +1191,9 @@ public:
     template <class _Key>
         const_iterator find(const _Key& __x) const { return find(__x, hash_function()(__x)); };
     template <class _Key>
-        iterator       find(const _Key& __x, std::size_t __hash);
+        iterator       find(const _Key& __x, size_t __hash);
     template <class _Key>
-        const_iterator find(const _Key& __x, std::size_t __hash) const;
+        const_iterator find(const _Key& __x, size_t __hash) const;
 
     typedef __hash_node_destructor<__node_allocator> _Dp;
     typedef unique_ptr<__node, _Dp> __node_holder;
@@ -1211,7 +1211,7 @@ public:
         size_type __count_unique(const _Key& __k) const;
     template <class _Key>
         _LIBCPP_INLINE_VISIBILITY
-        size_type __count_unique(const _Key& __k, std::size_t __hash) const;
+        size_type __count_unique(const _Key& __k, size_t __hash) const;
     template <class _Key>
         size_type __count_multi(const _Key& __k) const;
 
@@ -1223,10 +1223,10 @@ public:
         __equal_range_unique(const _Key& __k) const;
     template <class _Key>
         pair<iterator, iterator>
-        __equal_range_unique(const _Key& __k, std::size_t __hash);
+        __equal_range_unique(const _Key& __k, size_t __hash);
     template <class _Key>
         pair<const_iterator, const_iterator>
-        __equal_range_unique(const _Key& __k, std::size_t __hash) const;
+        __equal_range_unique(const _Key& __k, size_t __hash) const;
 
     template <class _Key>
         pair<iterator, iterator>
@@ -2227,7 +2227,7 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__rehash(size_type __nbc)
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, std::size_t __hash)
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, size_t __hash)
 {
     size_type __bc = bucket_count();
     if (__bc != 0)
@@ -2257,7 +2257,7 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, std::size_t __ha
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, std::size_t __hash) const
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, size_t __hash) const
 {
     size_type __bc = bucket_count();
     if (__bc != 0)
@@ -2494,7 +2494,7 @@ template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
 inline
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::size_type
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::__count_unique(const _Key& __k, std::size_t __hash) const
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__count_unique(const _Key& __k, size_t __hash) const
 {
   return static_cast<size_type>(find(__k, __hash) != end());
 }
@@ -2551,7 +2551,7 @@ template <class _Key>
 pair<typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator,
      typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator>
 __hash_table<_Tp, _Hash, _Equal, _Alloc>::__equal_range_unique(
-        const _Key& __k, std::size_t __hash)
+        const _Key& __k, size_t __hash)
 {
     iterator __i = find(__k, __hash);
     iterator __j = __i;
@@ -2565,7 +2565,7 @@ template <class _Key>
 pair<typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator,
      typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator>
 __hash_table<_Tp, _Hash, _Equal, _Alloc>::__equal_range_unique(
-        const _Key& __k, std::size_t __hash) const
+        const _Key& __k, size_t __hash) const
 {
     const_iterator __i = find(__k, __hash);
     const_iterator __j = __i;

@@ -1140,9 +1140,9 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __table_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
-    iterator       find(const key_type& __k, std::size_t __hash)       {return __table_.find(__k, __hash);}
+    iterator       find(const key_type& __k, size_t __hash)       {return __table_.find(__k, __hash);}
     _LIBCPP_INLINE_VISIBILITY
-    const_iterator find(const key_type& __k, std::size_t __hash) const {return __table_.find(__k, __hash);}
+    const_iterator find(const key_type& __k, size_t __hash) const {return __table_.find(__k, __hash);}
 
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
@@ -1155,16 +1155,16 @@ public:
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,iterator>::type
-    find(const _K2& __k, std::size_t __hash)       {return __table_.find(__k, __hash);}
+    find(const _K2& __k, size_t __hash)       {return __table_.find(__k, __hash);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,const_iterator>::type
-    find(const _K2& __k, std::size_t __hash) const {return __table_.find(__k, __hash);}
+    find(const _K2& __k, size_t __hash) const {return __table_.find(__k, __hash);}
 
     _LIBCPP_INLINE_VISIBILITY
     size_type count(const key_type& __k) const {return __table_.__count_unique(__k);}
     _LIBCPP_INLINE_VISIBILITY
-    size_type count(const key_type& __k, std::size_t __hash) const {return __table_.__count_unique(__k, __hash);}
+    size_type count(const key_type& __k, size_t __hash) const {return __table_.__count_unique(__k, __hash);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,iterator>::type
@@ -1172,19 +1172,19 @@ public:
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,iterator>::type
-    count(const _K2& __k, std::size_t __hash) const {return __table_.__count_unique(__k, __hash);}
+    count(const _K2& __k, size_t __hash) const {return __table_.__count_unique(__k, __hash);}
 
     _LIBCPP_INLINE_VISIBILITY
     pair<iterator, iterator>             equal_range(const key_type& __k)
         {return __table_.__equal_range_unique(__k);}
     _LIBCPP_INLINE_VISIBILITY
-    pair<iterator, iterator>             equal_range(const key_type& __k, std::size_t __hash)
+    pair<iterator, iterator>             equal_range(const key_type& __k, size_t __hash)
     {return __table_.__equal_range_unique(__k, __hash);}
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator, const_iterator> equal_range(const key_type& __k) const
         {return __table_.__equal_range_unique(__k);}
     _LIBCPP_INLINE_VISIBILITY
-    pair<const_iterator, const_iterator> equal_range(const key_type& __k, std::size_t __hash) const
+    pair<const_iterator, const_iterator> equal_range(const key_type& __k, size_t __hash) const
     {return __table_.__equal_range_unique(__k, __hash);}
 
     template <typename _K2>
@@ -1200,12 +1200,12 @@ public:
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,pair<iterator, iterator>>::type
-    equal_range(const _K2& __k, std::size_t __hash)
+    equal_range(const _K2& __k, size_t __hash)
     {return __table_.__equal_range_unique(__k, __hash);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__is_transparent<_Pred, _K2>::value && __is_transparent<_Hash, _K2>::value,pair<const_iterator, const_iterator>>::type
-    equal_range(const _K2& __k, std::size_t __hash) const
+    equal_range(const _K2& __k, size_t __hash) const
     {return __table_.__equal_range_unique(__k, __hash);}
 
     mapped_type& operator[](const key_type& __k);
