@@ -20,8 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-add_executable(tests tests.cpp)
+add_executable(tests
+        bm_heterogeneous_find.cpp
+        bm_heterogeneous_count_ptr.cpp
+        bm_heterogeneous_count_value.cpp
+        main.cpp)
 target_link_libraries(tests
         PRIVATE mp::unordered_v2 benchmark::benchmark)
+target_compile_features(tests PRIVATE cxx_std_17)
 add_test(NAME unordered_v2.tests
         COMMAND tests)
