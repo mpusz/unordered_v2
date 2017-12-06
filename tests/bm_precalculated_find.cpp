@@ -22,6 +22,7 @@
 
 #include "unordered_map"
 #include <benchmark/benchmark.h>
+#include <array>
 #include <random>
 #include <string>
 #include <string_view>
@@ -39,7 +40,8 @@ namespace {
     size_t operator()(const char* txt) const { return hash_type{}(txt); }
   };
 
-  constexpr size_t item_count = 1024;
+  constexpr size_t item_count = 128;
+  constexpr size_t array_size = 32;
 
   struct test_data {
     std::vector<std::string> storage;
@@ -60,19 +62,34 @@ namespace {
     return data;
   }
 
-  template<typename UnorderedMap, typename KeyType>
-  void bm_heterogeneous_map_find(benchmark::State& state)
-  {
-    auto data = make_test_data(state.range(0));
-    UnorderedMap map{data.test_sequence.begin(), data.test_sequence.end()};
-    for(auto _ : state)
-      for(const auto& el : data.test_sequence) benchmark::DoNotOptimize(map.find(static_cast<KeyType>(el.first)));
-  }
-
-  using regular_map = std::unordered_map<std::string, int>;
   using heterogeneous_map = std::unordered_map<std::string, int, string_hash, std::equal_to<>>;
 
-  BENCHMARK_TEMPLATE(bm_heterogeneous_map_find, regular_map, std::string)->Arg(0)->Arg(128);
-  BENCHMARK_TEMPLATE(bm_heterogeneous_map_find, heterogeneous_map, std::string_view)->Arg(0)->Arg(128);
+  void bm_precalculated_map_find(benchmark::State& state)
+  {
+    auto data = make_test_data(state.range(0));
+    std::array<heterogeneous_map, array_size> maps;
+    for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
+
+    for(auto _ : state)
+      for(const auto& el : data.test_sequence)
+        for(auto& m : maps) benchmark::DoNotOptimize(m.find(el.first));
+  }
+
+  void bm_precalculated_map_find_precalc(benchmark::State& state)
+  {
+    auto data = make_test_data(state.range(0));
+    std::array<heterogeneous_map, array_size> maps;
+    for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
+    auto hasher = maps[0].hash_function();
+
+    for(auto _ : state)
+      for(const auto& el : data.test_sequence) {
+        const auto hash = hasher(el.first);
+        for(auto& m : maps) benchmark::DoNotOptimize(m.find(el.first, hash));
+      }
+  }
+
+  BENCHMARK(bm_precalculated_map_find)->Arg(0)->Arg(128);
+  BENCHMARK(bm_precalculated_map_find_precalc)->Arg(0)->Arg(128);
 
 }  // namespace

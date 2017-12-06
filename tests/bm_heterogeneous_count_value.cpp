@@ -62,7 +62,7 @@ namespace {
   using heterogeneous_set =
       std::unordered_set<std::unique_ptr<my_data>, my_data_hash_transparent, my_data_equal_transparent>;
 
-  void bm_set_count_regular(benchmark::State& state)
+  void bm_heterogeneous_set_count_regular(benchmark::State& state)
   {
     regular_set set;
     for(size_t i = 0; i < item_count; ++i) set.insert(std::make_unique<my_data>(i));
@@ -71,7 +71,7 @@ namespace {
       for(size_t i = 0; i < item_count; ++i) benchmark::DoNotOptimize(set.count(std::make_unique<my_data>(i)));
   }
 
-  void bm_set_count_heterogeneous(benchmark::State& state)
+  void bm_heterogeneous_set_count_heterogeneous(benchmark::State& state)
   {
     heterogeneous_set set;
     for(size_t i = 0; i < item_count; ++i) set.insert(std::make_unique<my_data>(i));
@@ -80,7 +80,7 @@ namespace {
       for(size_t i = 0; i < item_count; ++i) benchmark::DoNotOptimize(set.count(i));
   }
 
-  BENCHMARK(bm_set_count_regular);
-  BENCHMARK(bm_set_count_heterogeneous);
+  BENCHMARK(bm_heterogeneous_set_count_regular);
+  BENCHMARK(bm_heterogeneous_set_count_heterogeneous);
 
 }  // namespace

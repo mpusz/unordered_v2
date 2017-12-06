@@ -96,7 +96,7 @@ namespace {
   using regular_map = std::unordered_map<my_data*, std::unique_ptr<my_data>>;
   using heterogeneous_set = std::unordered_set<std::unique_ptr<my_data>, my_data_hash, my_data_equal>;
 
-  void bm_set_count_ptr_regular(benchmark::State& state)
+  void bm_heterogeneous_set_count_ptr_regular(benchmark::State& state)
   {
     auto data = make_test_data();
     regular_set set;
@@ -106,7 +106,7 @@ namespace {
       for(auto ptr : data.test_sequence) benchmark::DoNotOptimize(set.count(make_find_ptr(ptr)));
   }
 
-  void bm_map_count_ptr_regular(benchmark::State& state)
+  void bm_heterogeneous_map_count_ptr_regular(benchmark::State& state)
   {
     auto data = make_test_data();
     regular_map map;
@@ -119,7 +119,7 @@ namespace {
       for(auto ptr : data.test_sequence) benchmark::DoNotOptimize(map.count(ptr));
   }
 
-  void bm_set_count_ptr_heterogeneous(benchmark::State& state)
+  void bm_heterogeneous_set_count_ptr_heterogeneous(benchmark::State& state)
   {
     auto data = make_test_data();
     heterogeneous_set set;
@@ -129,8 +129,8 @@ namespace {
       for(auto ptr : data.test_sequence) benchmark::DoNotOptimize(set.count(ptr));
   }
 
-  BENCHMARK(bm_set_count_ptr_regular);
-  BENCHMARK(bm_map_count_ptr_regular);
-  BENCHMARK(bm_set_count_ptr_heterogeneous);
+  BENCHMARK(bm_heterogeneous_set_count_ptr_regular);
+  BENCHMARK(bm_heterogeneous_map_count_ptr_regular);
+  BENCHMARK(bm_heterogeneous_set_count_ptr_heterogeneous);
 
 }  // namespace

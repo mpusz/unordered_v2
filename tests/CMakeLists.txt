@@ -24,6 +24,7 @@ add_executable(tests
         bm_heterogeneous_find.cpp
         bm_heterogeneous_count_ptr.cpp
         bm_heterogeneous_count_value.cpp
+        bm_precalculated_find.cpp
         main.cpp)
 target_link_libraries(tests
         PRIVATE mp::unordered_v2 benchmark::benchmark)
