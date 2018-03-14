@@ -32,7 +32,7 @@ using namespace std::literals;
 namespace {
 
   struct string_hash {
-    using is_transparent = void;                    // I confirm I know what I am doing
+    using transparent_key_equal = std::equal_to<>;  // KeyEqual to use
     using hash_type = std::hash<std::string_view>;  // helper local type
     size_t operator()(std::string_view txt) const { return hash_type{}(txt); }
     size_t operator()(const std::string& txt) const { return hash_type{}(txt); }
@@ -70,7 +70,12 @@ namespace {
   }
 
   using regular_map = std::unordered_map<std::string, int>;
-  using heterogeneous_map = std::unordered_map<std::string, int, string_hash, std::equal_to<>>;
+  static_assert(std::is_same_v<regular_map::key_equal, std::equal_to<std::string>>, "Invalid key_equal");
+
+  template<typename Key, typename Value>
+  using h_str_umap = std::unordered_map<Key, Value, string_hash>;
+  using heterogeneous_map = h_str_umap<std::string, int>;
+  static_assert(std::is_same_v<heterogeneous_map::key_equal, string_hash::transparent_key_equal>, "Invalid key_equal");
 
   BENCHMARK_TEMPLATE(bm_heterogeneous_map_find, regular_map, std::string)->Arg(0)->Arg(128);
   BENCHMARK_TEMPLATE(bm_heterogeneous_map_find, heterogeneous_map, std::string_view)->Arg(0)->Arg(128);

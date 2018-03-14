@@ -33,7 +33,7 @@ using namespace std::literals;
 namespace {
 
   struct string_hash {
-    using is_transparent = void;                    // I confirm I know what I am doing
+    using transparent_key_equal = std::equal_to<>;  // KeyEqual to use
     using hash_type = std::hash<std::string_view>;  // helper local type
     size_t operator()(std::string_view txt) const { return hash_type{}(txt); }
     size_t operator()(const std::string& txt) const { return hash_type{}(txt); }
@@ -62,7 +62,7 @@ namespace {
     return data;
   }
 
-  using heterogeneous_map = std::unordered_map<std::string, int, string_hash, std::equal_to<>>;
+  using heterogeneous_map = std::unordered_map<std::string, int, string_hash>;
 
   void bm_precalculated_map_find(benchmark::State& state)
   {

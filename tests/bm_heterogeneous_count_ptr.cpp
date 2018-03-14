@@ -44,7 +44,7 @@ namespace {
   };
 
   struct my_data_hash {
-    using is_transparent = void;
+    using transparent_key_equal = my_data_equal;  // KeyEqual to use
     size_t operator()(const std::unique_ptr<my_data>& v) const { return std::hash<const my_data*>{}(v.get()); }
     size_t operator()(const my_data* ptr) const { return std::hash<const my_data*>{}(ptr); }
   };
@@ -94,7 +94,7 @@ namespace {
 
   using regular_set = std::unordered_set<set_unique_ptr<my_data>>;
   using regular_map = std::unordered_map<my_data*, std::unique_ptr<my_data>>;
-  using heterogeneous_set = std::unordered_set<std::unique_ptr<my_data>, my_data_hash, my_data_equal>;
+  using heterogeneous_set = std::unordered_set<std::unique_ptr<my_data>, my_data_hash>;
 
   void bm_heterogeneous_set_count_ptr_regular(benchmark::State& state)
   {

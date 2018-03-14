@@ -40,11 +40,33 @@ template <class _Key, class _Tp>
 struct __hash_value_type;
 #endif
 
+#if _LIBCPP_STD_VER > 11
+
+template <class _Tp, class = void, class = void>
+struct __has_transparent_key_equal : false_type {};
+
+template <class _Tp, class _Up>
+struct __has_transparent_key_equal<_Tp, _Up,
+                                   typename __void_t<typename _Tp::transparent_key_equal>::type> : true_type {};
+
+template <class _Hash, class _KeyEqual, bool = __has_transparent_key_equal<_Hash>::value>
+struct __key_equal {
+  using type = _KeyEqual;
+};
+
+template <class _Hash, class _KeyEqual>
+struct __key_equal<_Hash, _KeyEqual, true> {
+  using type = typename _Hash::transparent_key_equal;
+};
+
+#endif
+
+
 template <class _Key, class _Cp, class _Hash,
           bool =  is_empty<_Hash>::value && !__libcpp_is_final<_Hash>::value>
 class __unordered_map_hasher;
 
-template <class _Key, class _Cp, class _Pred,
+template <class _Key, class _Cp, class _Hash, class _Pred,
           bool = is_empty<_Pred>::value && !__libcpp_is_final<_Pred>::value
          >
 class __unordered_map_equal;
@@ -889,7 +911,7 @@ template <class _Key, class _Value, class _Hash, class _Equal, class _Alloc>
 struct __diagnose_hash_table_helper<
   __hash_value_type<_Key, _Value>,
   __unordered_map_hasher<_Key, __hash_value_type<_Key, _Value>, _Hash>,
-  __unordered_map_equal<_Key, __hash_value_type<_Key, _Value>, _Equal>,
+  __unordered_map_equal<_Key, __hash_value_type<_Key, _Value>, _Hash, _Equal>,
   _Alloc>
 : __diagnose_hash_table_helper<_Key, _Hash, _Equal, _Alloc>
 {
