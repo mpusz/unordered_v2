@@ -32,41 +32,14 @@ _LIBCPP_PUSH_MACROS
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#ifndef _LIBCPP_CXX03_LANG
-template <class _Key, class _Tp>
-union __hash_value_type;
-#else
 template <class _Key, class _Tp>
 struct __hash_value_type;
-#endif
-
-#if _LIBCPP_STD_VER > 11
-
-template <class _Tp, class = void, class = void>
-struct __has_transparent_key_equal : false_type {};
-
-template <class _Tp, class _Up>
-struct __has_transparent_key_equal<_Tp, _Up,
-                                   typename __void_t<typename _Tp::transparent_key_equal>::type> : true_type {};
-
-template <class _Hash, class _KeyEqual, bool = __has_transparent_key_equal<_Hash>::value>
-struct __key_equal {
-  using type = _KeyEqual;
-};
-
-template <class _Hash, class _KeyEqual>
-struct __key_equal<_Hash, _KeyEqual, true> {
-  using type = typename _Hash::transparent_key_equal;
-};
-
-#endif
-
 
 template <class _Key, class _Cp, class _Hash,
           bool =  is_empty<_Hash>::value && !__libcpp_is_final<_Hash>::value>
 class __unordered_map_hasher;
 
-template <class _Key, class _Cp, class _Hash, class _Pred,
+template <class _Key, class _Cp, class _Pred,
           bool = is_empty<_Pred>::value && !__libcpp_is_final<_Pred>::value
          >
 class __unordered_map_equal;
@@ -194,7 +167,7 @@ struct __hash_key_value_types {
   }
 #ifndef _LIBCPP_CXX03_LANG
   _LIBCPP_INLINE_VISIBILITY
-  static  __container_value_type&& __move(__node_value_type& __v) {
+  static __container_value_type&& __move(__node_value_type& __v) {
     return _VSTD::move(__v);
   }
 #endif
@@ -206,7 +179,6 @@ struct __hash_key_value_types<__hash_value_type<_Key, _Tp> > {
   typedef _Tp                                          mapped_type;
   typedef __hash_value_type<_Key, _Tp>                 __node_value_type;
   typedef pair<const _Key, _Tp>                        __container_value_type;
-  typedef pair<_Key, _Tp>                              __nc_value_type;
   typedef __container_value_type                       __map_value_type;
   static const bool __is_map = true;
 
@@ -220,7 +192,7 @@ struct __hash_key_value_types<__hash_value_type<_Key, _Tp> > {
   static typename enable_if<__is_same_uncvref<_Up, __node_value_type>::value,
       __container_value_type const&>::type
   __get_value(_Up& __t) {
-    return __t.__cc;
+    return __t.__get_value();
   }
 
   template <class _Up>
@@ -233,12 +205,12 @@ struct __hash_key_value_types<__hash_value_type<_Key, _Tp> > {
 
   _LIBCPP_INLINE_VISIBILITY
   static __container_value_type* __get_ptr(__node_value_type& __n) {
-    return _VSTD::addressof(__n.__cc);
+    return _VSTD::addressof(__n.__get_value());
   }
 #ifndef _LIBCPP_CXX03_LANG
   _LIBCPP_INLINE_VISIBILITY
-  static __nc_value_type&& __move(__node_value_type& __v) {
-    return _VSTD::move(__v.__nc);
+  static pair<key_type&&, mapped_type&&> __move(__node_value_type& __v) {
+    return __v.__move();
   }
 #endif
 
@@ -887,6 +859,17 @@ public:
     template <class> friend class __hash_map_node_destructor;
 };
 
+#if _LIBCPP_STD_VER > 14
+template <class _NodeType, class _Alloc>
+struct __generic_container_node_destructor;
+
+template <class _Tp, class _VoidPtr, class _Alloc>
+struct __generic_container_node_destructor<__hash_node<_Tp, _VoidPtr>, _Alloc>
+    : __hash_node_destructor<_Alloc>
+{
+    using __hash_node_destructor<_Alloc>::__hash_node_destructor;
+};
+#endif
 
 #ifndef _LIBCPP_CXX03_LANG
 template <class _Key, class _Hash, class _Equal, class _Alloc>
@@ -911,7 +894,7 @@ template <class _Key, class _Value, class _Hash, class _Equal, class _Alloc>
 struct __diagnose_hash_table_helper<
   __hash_value_type<_Key, _Value>,
   __unordered_map_hasher<_Key, __hash_value_type<_Key, _Value>, _Hash>,
-  __unordered_map_equal<_Key, __hash_value_type<_Key, _Value>, _Hash, _Equal>,
+  __unordered_map_equal<_Key, __hash_value_type<_Key, _Value>, _Equal>,
   _Alloc>
 : __diagnose_hash_table_helper<_Key, _Hash, _Equal, _Alloc>
 {
@@ -1179,6 +1162,30 @@ public:
         return __emplace_unique_key_args(_NodeTypes::__get_key(__x), __x);
     }
 
+#if _LIBCPP_STD_VER > 14
+    template <class _NodeHandle, class _InsertReturnType>
+    _LIBCPP_INLINE_VISIBILITY
+    _InsertReturnType __node_handle_insert_unique(_NodeHandle&& __nh);
+    template <class _NodeHandle>
+    _LIBCPP_INLINE_VISIBILITY
+    iterator __node_handle_insert_unique(const_iterator __hint,
+                                         _NodeHandle&& __nh);
+
+    template <class _NodeHandle>
+    _LIBCPP_INLINE_VISIBILITY
+    iterator __node_handle_insert_multi(_NodeHandle&& __nh);
+    template <class _NodeHandle>
+    _LIBCPP_INLINE_VISIBILITY
+    iterator __node_handle_insert_multi(const_iterator __hint, _NodeHandle&& __nh);
+
+    template <class _NodeHandle>
+    _LIBCPP_INLINE_VISIBILITY
+    _NodeHandle __node_handle_extract(key_type const& __key);
+    template <class _NodeHandle>
+    _LIBCPP_INLINE_VISIBILITY
+    _NodeHandle __node_handle_extract(const_iterator __it);
+#endif
+
     void clear() _NOEXCEPT;
     void rehash(size_type __n);
     _LIBCPP_INLINE_VISIBILITY void reserve(size_type __n)
@@ -1209,13 +1216,9 @@ public:
         }
 
     template <class _Key>
-        iterator       find(const _Key& __x) { return find(__x, hash_function()(__x)); };
+        iterator       find(const _Key& __x);
     template <class _Key>
-        const_iterator find(const _Key& __x) const { return find(__x, hash_function()(__x)); };
-    template <class _Key>
-        iterator       find(const _Key& __x, size_t __hash);
-    template <class _Key>
-        const_iterator find(const _Key& __x, size_t __hash) const;
+        const_iterator find(const _Key& __x) const;
 
     typedef __hash_node_destructor<__node_allocator> _Dp;
     typedef unique_ptr<__node, _Dp> __node_holder;
@@ -1232,9 +1235,6 @@ public:
         _LIBCPP_INLINE_VISIBILITY
         size_type __count_unique(const _Key& __k) const;
     template <class _Key>
-        _LIBCPP_INLINE_VISIBILITY
-        size_type __count_unique(const _Key& __k, size_t __hash) const;
-    template <class _Key>
         size_type __count_multi(const _Key& __k) const;
 
     template <class _Key>
@@ -1243,12 +1243,6 @@ public:
     template <class _Key>
         pair<const_iterator, const_iterator>
         __equal_range_unique(const _Key& __k) const;
-    template <class _Key>
-        pair<iterator, iterator>
-        __equal_range_unique(const _Key& __k, size_t __hash);
-    template <class _Key>
-        pair<const_iterator, const_iterator>
-        __equal_range_unique(const _Key& __k, size_t __hash) const;
 
     template <class _Key>
         pair<iterator, iterator>
@@ -2167,6 +2161,91 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__insert_multi(const_iterator __p,
 
 #endif  // _LIBCPP_CXX03_LANG
 
+#if _LIBCPP_STD_VER > 14
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle, class _InsertReturnType>
+_LIBCPP_INLINE_VISIBILITY
+_InsertReturnType
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_insert_unique(
+    _NodeHandle&& __nh)
+{
+    if (__nh.empty())
+        return _InsertReturnType{end(), false, _NodeHandle()};
+    pair<iterator, bool> __result = __node_insert_unique(__nh.__ptr_);
+    if (__result.second)
+        __nh.__release();
+    return _InsertReturnType{__result.first, __result.second, _VSTD::move(__nh)};
+}
+
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle>
+_LIBCPP_INLINE_VISIBILITY
+typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_insert_unique(
+    const_iterator, _NodeHandle&& __nh)
+{
+    if (__nh.empty())
+        return end();
+    pair<iterator, bool> __result = __node_insert_unique(__nh.__ptr_);
+    if (__result.second)
+        __nh.__release();
+    return __result.first;
+}
+
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle>
+_LIBCPP_INLINE_VISIBILITY
+_NodeHandle
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_extract(
+    key_type const& __key)
+{
+    iterator __i = find(__key);
+    if (__i == end())
+        return _NodeHandle();
+    return __node_handle_extract<_NodeHandle>(__i);
+}
+
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle>
+_LIBCPP_INLINE_VISIBILITY
+_NodeHandle
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_extract(
+    const_iterator __p)
+{
+    allocator_type __alloc(__node_alloc());
+    return _NodeHandle(remove(__p).release(), __alloc);
+}
+
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle>
+_LIBCPP_INLINE_VISIBILITY
+typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_insert_multi(
+    _NodeHandle&& __nh)
+{
+    if (__nh.empty())
+        return end();
+    iterator __result = __node_insert_multi(__nh.__ptr_);
+    __nh.__release();
+    return __result;
+}
+
+template <class _Tp, class _Hash, class _Equal, class _Alloc>
+template <class _NodeHandle>
+_LIBCPP_INLINE_VISIBILITY
+typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::__node_handle_insert_multi(
+    const_iterator __hint, _NodeHandle&& __nh)
+{
+    if (__nh.empty())
+        return end();
+    iterator __result = __node_insert_multi(__hint, __nh.__ptr_);
+    __nh.__release();
+    return __result;
+}
+
+#endif  // _LIBCPP_STD_VER > 14
+
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 void
 __hash_table<_Tp, _Hash, _Equal, _Alloc>::rehash(size_type __n)
@@ -2249,8 +2328,9 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__rehash(size_type __nbc)
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, size_t __hash)
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k)
 {
+    size_t __hash = hash_function()(__k);
     size_type __bc = bucket_count();
     if (__bc != 0)
     {
@@ -2279,8 +2359,9 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, size_t __hash)
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k, size_t __hash) const
+__hash_table<_Tp, _Hash, _Equal, _Alloc>::find(const _Key& __k) const
 {
+    size_t __hash = hash_function()(__k);
     size_type __bc = bucket_count();
     if (__bc != 0)
     {
@@ -2514,15 +2595,6 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__count_unique(const _Key& __k) const
 
 template <class _Tp, class _Hash, class _Equal, class _Alloc>
 template <class _Key>
-inline
-typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::size_type
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::__count_unique(const _Key& __k, size_t __hash) const
-{
-  return static_cast<size_type>(find(__k, __hash) != end());
-}
-
-template <class _Tp, class _Hash, class _Equal, class _Alloc>
-template <class _Key>
 typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::size_type
 __hash_table<_Tp, _Hash, _Equal, _Alloc>::__count_multi(const _Key& __k) const
 {
@@ -2562,34 +2634,6 @@ __hash_table<_Tp, _Hash, _Equal, _Alloc>::__equal_range_unique(
         const _Key& __k) const
 {
     const_iterator __i = find(__k);
-    const_iterator __j = __i;
-    if (__i != end())
-        ++__j;
-    return pair<const_iterator, const_iterator>(__i, __j);
-}
-
-template <class _Tp, class _Hash, class _Equal, class _Alloc>
-template <class _Key>
-pair<typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator,
-     typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::iterator>
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::__equal_range_unique(
-        const _Key& __k, size_t __hash)
-{
-    iterator __i = find(__k, __hash);
-    iterator __j = __i;
-    if (__i != end())
-        ++__j;
-    return pair<iterator, iterator>(__i, __j);
-}
-
-template <class _Tp, class _Hash, class _Equal, class _Alloc>
-template <class _Key>
-pair<typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator,
-     typename __hash_table<_Tp, _Hash, _Equal, _Alloc>::const_iterator>
-__hash_table<_Tp, _Hash, _Equal, _Alloc>::__equal_range_unique(
-        const _Key& __k, size_t __hash) const
-{
-    const_iterator __i = find(__k, __hash);
     const_iterator __j = __i;
     if (__i != end())
         ++__j;
