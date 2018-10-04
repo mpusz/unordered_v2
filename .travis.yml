@@ -42,17 +42,17 @@ git:
 matrix:
   include:
     - os: linux
-      env: CLANG_VERSION=7 BUILD_TYPE=Release
-      addons: &clang7
+      env: CLANG_VERSION=6.0 BUILD_TYPE=Release
+      addons: &clang6
         apt:
           sources:
-            - llvm-toolchain-trusty-7
+            - llvm-toolchain-trusty-6.0
           packages:
-            - clang-7 libc++-7-dev
+            - clang-6.0 libc++-6.0-dev
 
     - os: linux
-      env: CLANG_VERSION=7 BUILD_TYPE=Debug
-      addons: *clang7
+      env: CLANG_VERSION=6.0 BUILD_TYPE=Debug
+      addons: *clang6
 
 before_install:
   - |
