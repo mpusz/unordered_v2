@@ -8,8 +8,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef _LIBCPP_UNORDERED_SET
-#define _LIBCPP_UNORDERED_SET
+#pragma once
 
 /*
 
@@ -335,7 +334,7 @@ template <class Value, class Hash, class Pred, class Alloc>
 */
 
 #include <__config>
-#include <__hash_table>
+#include "__hash_table"
 #include <__node_handle>
 #include <functional>
 
@@ -356,12 +355,20 @@ public:
     typedef _Value                                                     key_type;
     typedef key_type                                                   value_type;
     typedef _Hash                                                      hasher;
-    typedef _Pred                                                      key_equal;
+    typedef typename __key_equal<_Hash, _Pred>::type                   key_equal;
     typedef _Alloc                                                     allocator_type;
     typedef value_type&                                                reference;
     typedef const value_type&                                          const_reference;
     static_assert((is_same<value_type, typename allocator_type::value_type>::value),
                   "Invalid allocator::value_type");
+    static_assert(!__has_transparent_key_equal<_Hash>::value ||
+                  __is_transparent<typename __key_equal<_Hash, _Pred>::type, void>::value,
+                  "Hasher provided non-transparent key_equal");
+
+    static_assert(!__has_transparent_key_equal<_Hash>::value ||
+                  is_same_v<_Pred, equal_to<_Value>> ||
+                                   is_same_v<_Pred, key_equal>,
+                  "Heterogeneous lookup requires KeyEqual to either be the default container value or the same as the type provided by Hash");
 
 private:
     typedef __hash_table<value_type, hasher, key_equal, allocator_type> __table;
@@ -605,14 +612,41 @@ public:
     iterator       find(const key_type& __k)       {return __table_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __table_.find(__k);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, iterator>::type
+    find(const _K2& __k)       {return __table_.find(__k);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, const_iterator>::type
+    find(const _K2& __k) const {return __table_.find(__k);}
+
     _LIBCPP_INLINE_VISIBILITY
     size_type count(const key_type& __k) const {return __table_.__count_unique(__k);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, size_type>::type
+    count(const _K2& __k) const {return __table_.__count_unique(__k);}
+
     _LIBCPP_INLINE_VISIBILITY
     pair<iterator, iterator>             equal_range(const key_type& __k)
         {return __table_.__equal_range_unique(__k);}
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator, const_iterator> equal_range(const key_type& __k) const
         {return __table_.__equal_range_unique(__k);}
+
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, pair<iterator, iterator>>::type
+    equal_range(const _K2& __k)
+    {return __table_.__equal_range_unique(__k);}
+    template <typename _K2>
+    _LIBCPP_INLINE_VISIBILITY
+    typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, pair<const_iterator, const_iterator>>::type
+    equal_range(const _K2& __k) const
+    {return __table_.__equal_range_unique(__k);}
 
     _LIBCPP_INLINE_VISIBILITY
     size_type bucket_count() const _NOEXCEPT {return __table_.bucket_count();}
@@ -1430,5 +1464,3 @@ operator!=(const unordered_multiset<_Value, _Hash, _Pred, _Alloc>& __x,
 }
 
 _LIBCPP_END_NAMESPACE_STD
-
-#endif  // _LIBCPP_UNORDERED_SET
