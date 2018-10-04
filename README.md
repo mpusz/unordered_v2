@@ -17,7 +17,7 @@ POC implementation is based on [libc++ 5.0.0](https://libcxx.llvm.org). In order
 compile and run example code you have to install that version of libc++ on your PC.
 
 Moreover it uses [Google Benchmark](https://github.com/google/benchmark) library to
-measure implement time-sensitive tests. You may either download, build and install
+implement time-sensitive tests. You may either download, build and install
 that library by yourself or use `conan` package manager to that for you.
 
 

@@ -30,7 +30,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/cmake")
 include(tools)
 
 # use Conan configuration if available
-conan_init()
+conan_init(cmake)
 
 # add dependencies
 find_package(benchmark CONFIG REQUIRED)

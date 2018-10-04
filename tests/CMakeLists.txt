@@ -25,9 +25,12 @@ add_executable(tests
         bm_heterogeneous_count_ptr.cpp
         bm_heterogeneous_count_value.cpp
         bm_precalculated_find.cpp
-        main.cpp)
+)
 target_link_libraries(tests
-        PRIVATE mp::unordered_v2 benchmark::benchmark)
+    PRIVATE
+        mp::unordered_v2
+        benchmark::benchmark_main
+)
 target_compile_features(tests PRIVATE cxx_std_17)
 add_test(NAME unordered_v2.tests
         COMMAND tests)

@@ -26,4 +26,5 @@ target_compile_features(unordered_v2 INTERFACE cxx_std_17)
 target_include_directories(unordered_v2 INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+target_compile_options(unordered_v2 INTERFACE "-stdlib=libc++")
 add_library(mp::unordered_v2 ALIAS unordered_v2)
