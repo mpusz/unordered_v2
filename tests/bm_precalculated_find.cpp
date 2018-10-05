@@ -27,17 +27,45 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <mutex>
+
 
 using namespace std::literals;
 
 namespace {
 
-  struct string_hash {
-    using transparent_key_equal = std::equal_to<>;  // KeyEqual to use
-    using hash_type = std::hash<std::string_view>;  // helper local type
-    size_t operator()(std::string_view txt) const { return hash_type{}(txt); }
-    size_t operator()(const std::string& txt) const { return hash_type{}(txt); }
-    size_t operator()(const char* txt) const { return hash_type{}(txt); }
+  template<typename Key, typename Hash>
+  struct hash_cache {
+    inline static std::pair<Key, std::size_t> cache;
+    size_t operator()(const Key& k) const
+    {
+      std::size_t val{};
+      if (k != cache.first) {
+        cache.first = k;
+        cache.second = Hash()(k);
+      }
+      val = cache.second;
+      return val;
+    }
+  };
+
+  template<typename Key, typename Hash>
+  struct hash_cache_sync {
+    inline static std::mutex m;
+    inline static std::pair<Key, std::size_t> cache;
+    size_t operator()(const Key& k) const
+    {
+      std::size_t val{};
+      {
+        std::scoped_lock lock(m);
+        if (k != cache.first) {
+          cache.first = k;
+          cache.second = Hash()(k);
+        }
+        val = cache.second;
+      }
+      return val;
+    }
   };
 
   constexpr size_t item_count = 128;
@@ -45,7 +73,7 @@ namespace {
 
   struct test_data {
     std::vector<std::string> storage;
-    std::vector<std::pair<std::string_view, int>> test_sequence;
+    std::vector<std::pair<std::string, int>> test_sequence;
   };
 
   test_data make_test_data(size_t base_str_length)
@@ -62,12 +90,32 @@ namespace {
     return data;
   }
 
-  using heterogeneous_map = std::unordered_map<std::string, int, string_hash>;
-
   void bm_precalculated_map_find(benchmark::State& state)
   {
     auto data = make_test_data(state.range(0));
-    std::array<heterogeneous_map, array_size> maps;
+    std::array<std::unordered_map<std::string, int>, array_size> maps;
+    for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
+
+    for(auto _ : state)
+      for(const auto& el : data.test_sequence)
+        for(auto& m : maps) benchmark::DoNotOptimize(m.find(el.first));
+  }
+
+  void bm_precalculated_map_find_cache(benchmark::State& state)
+  {
+    auto data = make_test_data(state.range(0));
+    std::array<std::unordered_map<std::string, int, hash_cache<std::string, std::hash<std::string>>>, array_size> maps;
+    for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
+
+    for(auto _ : state)
+      for(const auto& el : data.test_sequence)
+        for(auto& m : maps) benchmark::DoNotOptimize(m.find(el.first));
+  }
+
+  void bm_precalculated_map_find_cache_sync(benchmark::State& state)
+  {
+    auto data = make_test_data(state.range(0));
+    std::array<std::unordered_map<std::string, int, hash_cache_sync<std::string, std::hash<std::string>>>, array_size> maps;
     for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
 
     for(auto _ : state)
@@ -78,9 +126,9 @@ namespace {
   void bm_precalculated_map_find_precalc(benchmark::State& state)
   {
     auto data = make_test_data(state.range(0));
-    std::array<heterogeneous_map, array_size> maps;
+    std::array<std::unordered_map<std::string, int>, array_size> maps;
     for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
-    auto hasher = maps[0].hash_function();
+    auto hasher = maps.front().hash_function();
 
     for(auto _ : state)
       for(const auto& el : data.test_sequence) {
@@ -90,6 +138,8 @@ namespace {
   }
 
   BENCHMARK(bm_precalculated_map_find)->Arg(0)->Arg(128);
+  BENCHMARK(bm_precalculated_map_find_cache)->Arg(0)->Arg(128);
+  BENCHMARK(bm_precalculated_map_find_cache_sync)->Arg(0)->Arg(128);
   BENCHMARK(bm_precalculated_map_find_precalc)->Arg(0)->Arg(128);
 
 }  // namespace
