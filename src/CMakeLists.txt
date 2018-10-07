@@ -27,5 +27,5 @@ target_include_directories(unordered_v2 INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 target_compile_options(unordered_v2 INTERFACE "-stdlib=libc++")
-target_link_libraries(unordered_v2 INTERFACE "-lc++ -lc++abi")
+target_link_libraries(unordered_v2 INTERFACE "-lc++")
 add_library(mp::unordered_v2 ALIAS unordered_v2)
