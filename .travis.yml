@@ -115,4 +115,4 @@ install:
 script:
   - |
     # Run unit tests
-    ctest -VV -j2
+    ctest -VV
