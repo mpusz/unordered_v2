@@ -46,9 +46,10 @@ matrix:
       addons: &clang7
         apt:
           sources:
+            - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-7
           packages:
-            - clang-7 libc++-7-dev libc++abi-7-dev libstdc++-7-dev
+            - clang-7 libc++-7-dev
 
     - os: linux
       env: CLANG_VERSION=7 BUILD_TYPE=Debug
