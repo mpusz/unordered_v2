@@ -128,11 +128,10 @@ namespace {
     auto data = make_test_data(state.range(0));
     std::array<std::unordered_map<std::string, int>, array_size> maps;
     for(auto& m : maps) m.insert(data.test_sequence.begin(), data.test_sequence.end());
-    auto hasher = maps.front().hash_function();
 
     for(auto _ : state)
       for(const auto& el : data.test_sequence) {
-        const auto hash = hasher(el.first);
+        const auto hash = maps.front().hash_token(el.first);
         for(auto& m : maps) benchmark::DoNotOptimize(m.find(el.first, hash));
       }
   }
