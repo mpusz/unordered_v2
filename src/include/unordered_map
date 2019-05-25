@@ -890,6 +890,10 @@ private:
     typedef unique_ptr<__node, _Dp>                         __node_holder;
     typedef allocator_traits<allocator_type>               __alloc_traits;
 
+    struct __hash_token {
+      size_t value;
+    };
+
     static_assert((is_same<typename __table::__container_value_type, value_type>::value), "");
     static_assert((is_same<typename __table::__node_value_type, __value_type>::value), "");
 public:
@@ -1245,14 +1249,18 @@ public:
     key_equal key_eq() const
         {return __table_.key_eq().key_eq();}
 
+    auto hash_token(const key_type& __k) const { return __hash_token{ hash_function()(__k) }; }
+
     _LIBCPP_INLINE_VISIBILITY
     iterator       find(const key_type& __k)       {return __table_.find(__k);}
     _LIBCPP_INLINE_VISIBILITY
     const_iterator find(const key_type& __k) const {return __table_.find(__k);}
+    template<typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
-    iterator       find(const key_type& __k, size_t __hash)       {return __table_.find(__k, __hash);}
+    iterator       find(const key_type& __k, HashToken __hash)       {return __table_.find(__k, __hash.value);}
+    template<typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
-    const_iterator find(const key_type& __k, size_t __hash) const {return __table_.find(__k, __hash);}
+    const_iterator find(const key_type& __k, HashToken __hash) const {return __table_.find(__k, __hash.value);}
 
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
@@ -1262,40 +1270,43 @@ public:
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, const_iterator>::type
     find(const _K2& __k) const                     {return __table_.find(__k);}
-    template <typename _K2>
+    template <typename _K2, typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, iterator>::type
-    find(const _K2& __k, size_t __hash)       {return __table_.find(__k, __hash);}
-    template <typename _K2>
+    find(const _K2& __k, HashToken __hash)       {return __table_.find(__k, __hash.value);}
+    template <typename _K2, typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, const_iterator>::type
-    find(const _K2& __k, size_t __hash) const {return __table_.find(__k, __hash);}
+    find(const _K2& __k, HashToken __hash) const {return __table_.find(__k, __hash.value);}
 
     _LIBCPP_INLINE_VISIBILITY
     size_type count(const key_type& __k) const {return __table_.__count_unique(__k);}
+    template<typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
-    size_type count(const key_type& __k, size_t __hash) const {return __table_.__count_unique(__k, __hash);}
+    size_type count(const key_type& __k, HashToken __hash) const {return __table_.__count_unique(__k, __hash.value);}
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, size_type>::type
     count(const _K2& __k) const {return __table_.__count_unique(__k);}
-    template <typename _K2>
+    template <typename _K2, typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, size_type>::type
-    count(const _K2& __k, size_t __hash) const {return __table_.__count_unique(__k, __hash);}
+    count(const _K2& __k, HashToken __hash) const {return __table_.__count_unique(__k, __hash.value);}
 
     _LIBCPP_INLINE_VISIBILITY
     pair<iterator, iterator>             equal_range(const key_type& __k)
         {return __table_.__equal_range_unique(__k);}
+    template<typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
-    pair<iterator, iterator>             equal_range(const key_type& __k, size_t __hash)
-    {return __table_.__equal_range_unique(__k, __hash);}
+    pair<iterator, iterator>             equal_range(const key_type& __k, HashToken __hash)
+    {return __table_.__equal_range_unique(__k, __hash.value);}
     _LIBCPP_INLINE_VISIBILITY
     pair<const_iterator, const_iterator> equal_range(const key_type& __k) const
         {return __table_.__equal_range_unique(__k);}
+    template<typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
-    pair<const_iterator, const_iterator> equal_range(const key_type& __k, size_t __hash) const
-    {return __table_.__equal_range_unique(__k, __hash);}
+    pair<const_iterator, const_iterator> equal_range(const key_type& __k, HashToken __hash) const
+    {return __table_.__equal_range_unique(__k, __hash.value);}
 
     template <typename _K2>
     _LIBCPP_INLINE_VISIBILITY
@@ -1307,16 +1318,16 @@ public:
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, const_iterator>::type
     equal_range(const _K2& __k) const
         {return __table_.__equal_range_unique(__k);}
-    template <typename _K2>
+    template <typename _K2, typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, iterator>::type
-    equal_range(const _K2& __k, size_t __hash)
-    {return __table_.__equal_range_unique(__k, __hash);}
-    template <typename _K2>
+    equal_range(const _K2& __k, HashToken __hash)
+    {return __table_.__equal_range_unique(__k, __hash.value);}
+    template <typename _K2, typename HashToken, typename = enable_if_t<is_same_v<HashToken, __hash_token>>>
     _LIBCPP_INLINE_VISIBILITY
     typename enable_if<__has_transparent_key_equal<_Hash, _K2>::value, const_iterator>::type
-    equal_range(const _K2& __k, size_t __hash) const
-    {return __table_.__equal_range_unique(__k, __hash);}
+    equal_range(const _K2& __k, HashToken __hash) const
+    {return __table_.__equal_range_unique(__k, __hash.value);}
 
     mapped_type& operator[](const key_type& __k);
 #ifndef _LIBCPP_CXX03_LANG
